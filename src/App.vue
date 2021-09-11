@@ -6,19 +6,48 @@
     <br><br>
     <label for="comment">コメント：</label>
     <textarea id="comment" v-model="comment"></textarea>
+    <br><br>
+    <button @click="createComment">コメントをサーバーに送る</button>
     <h2>掲示板</h2>
   </div>
 </template>
 
 <script>
+import axios from "axios";
 export default {
   data() {
     return {
       name: "",
       comment: ""
+    };
+  },
+  methods: {
+    createComment() {
+      // postメソッドでデータをサーバーに送信
+      axios.post("https://firestore.googleapis.com/v1/projects/vuejs-http-c2a1a/databases/(default)/documents/comments",
+        {
+          fields: {
+            name: {
+              stringValue: this.name
+            },
+            comment: {
+              stringValue: this.comment
+            }
+          }
+        }
+      )
+      // promiseという考え方による記述。以下の処理を後回しにして他の処理を行うが最終的に必ず実行する。
+      .then(response => {
+        console.log(response);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+      this.name = "";
+      this.comment = "";
     }
   }
-}
+};
 </script>
 
 <style>
