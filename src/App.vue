@@ -21,6 +21,13 @@ export default {
       comment: ""
     };
   },
+  created() {
+    axios.get("https://firestore.googleapis.com/v1/projects/vuejs-http-c2a1a/databases/(default)/documents/comments"
+    )
+    .then(response => {
+      console.log(response);
+    });
+  },
   methods: {
     createComment() {
       // postメソッドでデータをサーバーに送信
