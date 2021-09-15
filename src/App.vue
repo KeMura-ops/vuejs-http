@@ -9,6 +9,11 @@
     <br><br>
     <button @click="createComment">コメントをサーバーに送る</button>
     <h2>掲示板</h2>
+    <div v-for="post in posts" :key="post.name">
+      <br>
+      <div>名前：{{ post.fields.name.stringValue }}</div>
+      <div>名前：{{ post.fields.comment.stringValue }}</div>
+    </div>
   </div>
 </template>
 
@@ -18,14 +23,15 @@ export default {
   data() {
     return {
       name: "",
-      comment: ""
+      comment: "",
+      posts: []
     };
   },
   created() {
     axios.get("https://firestore.googleapis.com/v1/projects/vuejs-http-c2a1a/databases/(default)/documents/comments"
     )
     .then(response => {
-      console.log(response);
+      this.posts = response.data.documents;
     });
   },
   methods: {
@@ -43,13 +49,6 @@ export default {
           }
         }
       )
-      // promiseという考え方による記述。以下の処理を後回しにして他の処理を行うが最終的に必ず実行する。
-      .then(response => {
-        console.log(response);
-      })
-      .catch(error => {
-        console.log(error);
-      });
       this.name = "";
       this.comment = "";
     }
