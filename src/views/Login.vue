@@ -12,6 +12,8 @@
 </template>
 
 <script>
+import axios from '../axios-auth';
+
 export default {
   data() {
     return {
@@ -20,7 +22,21 @@ export default {
     };
   },
   methods: {
-    login() {}
+    login() {
+      axios.post(
+        // FirebaseAuthとWebAPIキー
+        '/accounts:signInWithPassword?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA',
+        {
+          email: this.email,
+          password: this.password,
+          returnSecureToken: true
+        }
+      ).then(response => {
+        console.log(response);
+      });
+      this.email = '';
+      this.password = '';
+    }
   }
 };
 </script>
