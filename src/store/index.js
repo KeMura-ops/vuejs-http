@@ -19,7 +19,7 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    autoLogin({ commit, dispatch }) {
+    async autoLogin({ commit, dispatch }) {
       const idToken = localStorage.getItem('idToken');
       if (!idToken) return;
       const now = new Date();
@@ -27,7 +27,7 @@ export default new Vuex.Store({
       const isExpired = now.getTime() >= expiryTimeMs;
       const refreshToken = localStorage.getItem('refreshToken');
       if (isExpired) {
-        dispatch('refreshIdToken', refreshToken);
+        await dispatch('refreshIdToken', refreshToken);
       } else {
         const expiresInMs = expiryTimeMs - now.getTime();
         setTimeout(() => {
@@ -35,67 +35,72 @@ export default new Vuex.Store({
         }, expiresInMs);
         commit('updateIdToken', idToken);
       }
-      commit('updateIdToken', idToken);
     },
     login({ dispatch }, authData) {
-      axios.post(
-        // FirebaseAuthとWebAPIキー
-        '/accounts:signInWithPassword?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA',
-        {
-          email: authData.email,
-          password: authData.password,
-          returnSecureToken: true
-        }
-      ).then(response => {
-        dispatch('setAuthData', {
-          idToken: response.data.idToken,
-          expiresIn: response.data.expiresIn,
-          refreshToken: response.data.refreshToken
+      axios
+        .post(
+          '/accounts:signInWithPassword?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA',
+          {
+            email: authData.email,
+            password: authData.password,
+            returnSecureToken: true
+          }
+        )
+        .then(response => {
+          dispatch('setAuthData', {
+            idToken: response.data.idToken,
+            expiresIn: response.data.expiresIn,
+            refreshToken: response.data.refreshToken
+          });
+          router.push('/');
         });
-        router.push('/');
-      });
     },
-    refreshIdToken({ dispatch }, refreshToken) {
-      axiosRefresh.post('/token?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA',
-      {
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken
-      }
-     ).then(response => {
-      dispatch('setAuthData', {
-        idToken: response.data.idToken,
-        expiresIn: response.data.expires_in,
-        refreshToken: response.data.refresh_token
-      });
-     });
+    logout({ commit }) {
+      commit('updateIdToken', null);
+      localStorage.removeItem('idToken');
+      localStorage.removeItem('expiryTimeMs');
+      localStorage.removeItem('refreshToken');
+      router.replace('/login');
+    },
+    async refreshIdToken({ dispatch }, refreshToken) {
+      await axiosRefresh
+        .post('/token?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA', {
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken
+        })
+        .then(response => {
+          dispatch('setAuthData', {
+            idToken: response.data.id_token,
+            expiresIn: response.data.expires_in,
+            refreshToken: response.data.refresh_token
+          });
+        });
     },
     register({ dispatch }, authData) {
-      axios.post(
-        // FirebaseAuthとWebAPIキー
-        '/accounts:signUp?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA',
-        {
+      axios
+        .post('/accounts:signUp?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA', {
           email: authData.email,
           password: authData.password,
           returnSecureToken: true
-        }
-      ).then(response => {
-        dispatch('setAuthData', {
-          idToken: response.data.idToken,
-          expiresIn: response.data.expiresIn,
-          refreshToken: response.data.refreshToken
+        })
+        .then(response => {
+          dispatch('setAuthData', {
+            idToken: response.data.idToken,
+            expiresIn: response.data.expiresIn,
+            refreshToken: response.data.refreshToken
+          });
+          router.push('/');
         });
-        router.push('/');
-      });
     },
     setAuthData({ commit, dispatch }, authData) {
       const now = new Date();
       const expiryTimeMs = now.getTime() + authData.expiresIn * 1000;
-      commit('updateIdToken',  authData.idToken);
-      localStorage.setItem('idToken',  authData.idToken);
+      commit('updateIdToken', authData.idToken);
+      localStorage.setItem('idToken', authData.idToken);
       localStorage.setItem('expiryTimeMs', expiryTimeMs);
-      localStorage.setItem('refreshToken',  authData.refreshToken);
+      localStorage.setItem('refreshToken', authData.refreshToken);
       setTimeout(() => {
-        dispatch('refreshIdToken',  authData.refreshToken);
+        dispatch('refreshIdToken', authData.refreshToken);
       }, authData.expiresIn * 1000);
     }
   }
