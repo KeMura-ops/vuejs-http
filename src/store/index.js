@@ -55,6 +55,7 @@ export default new Vuex.Store({
           router.push('/');
         });
     },
+    // ログアウトの記述
     logout({ commit }) {
       commit('updateIdToken', null);
       localStorage.removeItem('idToken');
@@ -62,6 +63,7 @@ export default new Vuex.Store({
       localStorage.removeItem('refreshToken');
       router.replace('/login');
     },
+    // ここまで
     async refreshIdToken({ dispatch }, refreshToken) {
       await axiosRefresh
         .post('/token?key=AIzaSyDbfw-lHMT91BRYpNn_Q3BOZgDWkX6N6BA', {
